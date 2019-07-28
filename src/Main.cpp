@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include <iostream>
 #include <math.h>
-#include <thread>
-#include <chrono>
 
 using namespace std;
 
@@ -33,15 +31,6 @@ int main (int argc, char *argv[])
     gameServer = new GameServer();
 
     gameServer->Start(port);
-
-    while (gameServer->IsRunning())
-    {
-        this_thread::sleep_for(chrono::milliseconds(1000));
-
-        cout << "Stopping GameServer\n\r";
-        gameServer->Stop();
-        cout << "GameServer stoppped\n\r";
-    }
 
     delete gameServer;
     gameServer = NULL;

@@ -9,7 +9,6 @@ class GameServer
         GameServer();
         virtual ~GameServer();
 
-        bool IsRunning();
         void Start(unsigned int port);
         void Stop();
     
