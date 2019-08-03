@@ -28,9 +28,9 @@ int main (int argc, char *argv[])
 
     cout << "Starting GameServer on port " << port << "\n\r";
 
-    gameServer = new GameServer();
+    gameServer = new GameServer(port);
 
-    gameServer->Start(port);
+    gameServer->Start();
 
     delete gameServer;
     gameServer = NULL;

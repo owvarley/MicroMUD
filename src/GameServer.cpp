@@ -1,11 +1,14 @@
 #include <thread>
 #include <chrono>
+#include <iostream>
 
 #include "GameServer.h"
+#include "Server.h"
+#include "Exception/SocketException.h"
 
 using namespace std;
 
-GameServer::GameServer()
+GameServer::GameServer(unsigned int port) : mSocket (port)
 {
 	_isRunning = false;
 }
@@ -15,17 +18,29 @@ GameServer::~GameServer()
 
 }
 
-void GameServer::Start(unsigned int port)
+void GameServer::Start()
 {
 	_isRunning = true;
 
-    while (_isRunning
+    try
     {
-        this_thread::sleep_for(chrono::milliseconds(1000));
+        mSocket.StartListening();
+        
+        while (_isRunning )
+        {
+            mSocket.CheckAndAcceptNewConnections();
+            
+            this_thread::sleep_for(chrono::milliseconds(5000));
 
-        cout << "Stopping GameServer\n\r";
-        gameServer->Stop();
-        cout << "GameServer stoppped\n\r";
+            _isRunning = false;
+        }
+
+        mSocket.CloseConnections();
+        mSocket.StopListening();
+    }
+    catch(const SocketException& e)
+    {
+        std::cerr << e.what() << '\n';
     }
 }
 
