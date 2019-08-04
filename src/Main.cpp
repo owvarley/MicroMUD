@@ -9,7 +9,7 @@ static int MAX_PORT = pow(2, 16);
 
 int main (int argc, char *argv[])
 {
-    GameServer * gameServer;
+    GameServer gameServer;
     int port;
 
     if (argc < 2)
@@ -28,12 +28,7 @@ int main (int argc, char *argv[])
 
     cout << "Starting GameServer on port " << port << "\n\r";
 
-    gameServer = new GameServer(port);
-
-    gameServer->Start();
-
-    delete gameServer;
-    gameServer = NULL;
+    gameServer.Start(port);
 
     exit(EXIT_SUCCESS);
 }

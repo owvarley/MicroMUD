@@ -8,7 +8,7 @@
 
 using namespace std;
 
-GameServer::GameServer(unsigned int port) : mSocket (port)
+GameServer::GameServer() : mServer ()
 {
 	_isRunning = false;
 }
@@ -18,25 +18,22 @@ GameServer::~GameServer()
 
 }
 
-void GameServer::Start()
+void GameServer::Start(unsigned int port)
 {
 	_isRunning = true;
 
     try
     {
-        mSocket.StartListening();
+        mServer.StartListening(port);
         
         while (_isRunning )
         {
-            mSocket.CheckAndAcceptNewConnections();
-            
-            this_thread::sleep_for(chrono::milliseconds(5000));
-
+            mServer.CheckAndAcceptNewConnections();
             _isRunning = false;
         }
 
-        mSocket.CloseConnections();
-        mSocket.StopListening();
+        mServer.CloseConnections();
+        mServer.StopListening();
     }
     catch(const SocketException& e)
     {

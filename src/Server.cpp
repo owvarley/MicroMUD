@@ -3,14 +3,12 @@
 #include <unistd.h>
 
 #include "Server.h"
+#include "Socket.h"
 #include "Exception/SocketException.h"
 
-Server::Server(int port)
+Server::Server() : mSocket()
 {
-    mSocket = INVALID_SOCKET;
-    mAddress.sin_family = AF_INET;
-    mAddress.sin_addr.s_addr = INADDR_ANY;
-    mAddress.sin_port = htons(port);
+
 }
 
 Server::~Server()
@@ -18,62 +16,56 @@ Server::~Server()
     mConnections.clear();
 }
 
+Socket Server::Accept()
+{
+    int nNewSocket;
+    sockaddr_in address;
+    socklen_t length;
+
+    length = sizeof address;
+
+    nNewSocket = accept(mSocket.GetFD(), (sockaddr *) &address, &length);
+
+    Socket ret(nNewSocket, address);
+
+    return ret;
+}
+
 void Server::CheckAndAcceptNewConnections()
 {
-    sockaddr_in NewConnection_Address;
-    socklen_t NewConnection_Length;
-    int NewConnection_Socket;
+    Socket NewConnection = Accept();
 
-    NewConnection_Length = sizeof NewConnection_Address;
-
-    NewConnection_Socket = accept(mSocket, (sockaddr *) &NewConnection_Address, &NewConnection_Length);
-
-    if (NewConnection_Socket == INVALID_SOCKET)
+    if (!NewConnection.IsValid())
     {
         // No connection to accept
         return;
     }
     else
     {
-        write(NewConnection_Socket, "Connected to MicroMUD.\n\r", 24); 
-        mConnections.push_back(NewConnection_Socket);
+        NewConnection.Write("Connected to MicroMUD.\n\r"); 
+        mConnections.push_back(NewConnection);
     }
 }
 
 void Server::CloseConnections()
 {
-    for (int socket : mConnections)
+    for (Socket socket : mConnections)
     {
-        write(socket, "MicroMUD is shutting down, disconnected.\n\r", 42);
-        close(socket);
+        socket.Write("MicroMUD is shutting down, disconnected.\n\r");
+        socket.Close();
     }
 }
 
-void Server::SetOption_AllowAddressReuse()
-{
-    // SO_REUSEADDR takes an int value and expects a boolean value
-    int nEnable = 1;
-
-    if ( setsockopt(mSocket, SOL_SOCKET, SO_REUSEADDR, &nEnable, sizeof(nEnable)) == SOCKET_ERROR)
-        throw SocketException("Unable to enable address reuse via setsockopt");
-}
-
-void Server::StartListening()
+void Server::StartListening(unsigned int port)
 {
     try
     {
-        if ( (mSocket = socket(AF_INET, SOCK_STREAM, Server::ANY_PROTOCOL)) == INVALID_SOCKET)
-            throw SocketException("Unable to create socket for server.");
+        mSocket.Create();
+        mSocket.SetPort(port);
+        mSocket.SetAllowAddressReuse();
+        mSocket.BindAndListen(MAX_CONNECTION_REQUESTS);
 
-        SetOption_AllowAddressReuse();
-
-        if ( bind(mSocket, (const sockaddr *) &mAddress, sizeof(mAddress)) == SOCKET_ERROR)
-            throw SocketException("Unable to bind socket for server.");
-
-        if ( listen(mSocket, MAX_CONNECTION_REQUESTS) == SOCKET_ERROR)
-            throw SocketException("Unable to start listening on server.");
-
-        std::cout << "Server running and accepting connections on port " << mAddress.sin_port << ".\n\r";
+        std::cout << "Server running and accepting connections on port " << port << ".\n\r";
     }
     catch(const SocketException& e)
     {
@@ -84,8 +76,6 @@ void Server::StartListening()
 
 void Server::StopListening()
 {
-    close(mSocket);
-    mSocket = INVALID_SOCKET;
-    
+    mSocket.Close();
     std::cout << "Server terminated.\n\r";
 }

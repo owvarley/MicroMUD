@@ -6,13 +6,13 @@
 class GameServer
 {
     bool _isRunning;
-    Server mSocket;
+    Server mServer;
 
     public:
-        GameServer(unsigned int port);
+        GameServer();
         virtual ~GameServer();
 
-        void Start();
+        void Start(unsigned int port);
         void Stop();
     
 };

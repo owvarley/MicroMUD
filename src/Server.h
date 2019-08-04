@@ -2,29 +2,26 @@
 #define SERVER_H_
 
 #include <sys/socket.h>
-#include <netinet/in.h>
 #include <list>
+
+#include "Socket.h"
 
 class Server
 {
-    int mSocket;
-    sockaddr_in mAddress;
+    Socket mSocket;
 
-    std::list<int> mConnections;
+    std::list<Socket> mConnections;
 
     public:
-        Server(int port);
+        Server();
         virtual ~Server();
 
+        Socket Accept();
         void CheckAndAcceptNewConnections();
         void CloseConnections();
-        void SetOption_AllowAddressReuse();
-        void StartListening();
+        void StartListening(unsigned int port);
         void StopListening();
 
-        static const int ANY_PROTOCOL = 0;
-        static const int SOCKET_ERROR = -1;
-        static const int INVALID_SOCKET = SOCKET_ERROR;
         static const int MAX_CONNECTION_REQUESTS = 10;
 
 };
